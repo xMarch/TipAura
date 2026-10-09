@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- net10 by default; -p:TipAuraNet11=true builds for .NET 11, whose native Zstandard API replaces SharpCompress. -->
+    <TipAuraNet11 Condition="'$(TipAuraNet11)' == ''">false</TipAuraNet11>
+    <TargetFramework Condition="'$(TipAuraNet11)' == 'true'">net11.0-windows10.0.18362.0</TargetFramework>
+    <TargetFramework Condition="'$(TipAuraNet11)' != 'true'">net10.0-windows10.0.18362.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableAgentSelfTests Condition="'$(EnableAgentSelfTests)' == ''">false</EnableAgentSelfTests>
+    <!-- Explorer/exe icon; AppWindow also loads it from the exe for the title bar and taskbar. -->
+    <ApplicationIcon>assets/tipaura.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- Version is the single source for About and release tags (v$(Version)). tools/release.ps1 sets
+       TipAuraRelease=true; every other build reports $(Version)-dev. -->
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <!-- Shown as a browser link in About; About hides the link while empty. -->
+    <RepositoryUrl>https://github.com/xMarch/TipAura</RepositoryUrl>
+    <TipAuraRelease Condition="'$(TipAuraRelease)' == ''">false</TipAuraRelease>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <InformationalVersion Condition="'$(TipAuraRelease)' != 'true'">$(Version)-dev</InformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="RepositoryUrl" Value="$(RepositoryUrl)" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(EnableAgentSelfTests)' == 'true'">
+    <DefineConstants>$(DefineConstants);TIPAURA_AGENT_SELF_TEST</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(PublishAot)' == 'true'">
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+    <PackageReference Include="NVorbis" Version="0.10.5" />
+    <PackageReference Include="Silk.NET.Input.Glfw" Version="2.23.0" />
+    <PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.23.0" />
+    <PackageReference Include="Vortice.Direct2D1" Version="3.8.3" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
+    <PackageReference Include="Vortice.DirectComposition" Version="3.8.3" />
+    <PackageReference Include="Vortice.DXGI" Version="3.8.3" />
+    <PackageReference Include="Vortice.MediaFoundation" Version="3.8.3" />
+    <PackageReference Include="Vortice.XAudio2" Version="3.8.3" />
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
+
+  <!-- Reads zstd (ZIP method 93) encounter packs on .NET 10; .NET 11 uses System.IO.Compression.ZstandardStream. -->
+  <ItemGroup Condition="'$(TipAuraNet11)' != 'true'">
+    <PackageReference Include="SharpCompress" Version="0.50.4" />
+  </ItemGroup>
+
+  <!-- Only agent builds compile HLSL, to regenerate and verify the embedded shader bytecode. -->
+  <ItemGroup Condition="'$(EnableAgentSelfTests)' == 'true'">
+    <PackageReference Include="Vortice.D3DCompiler" Version="3.8.3" />
+    <EmbeddedResource Include="assets/shaders/imgui.hlsl" LogicalName="tipaura.shaders.imgui.hlsl" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="assets/fonts/lucide-*.ttf" LogicalName="tipaura.lucide.ttf" />
+    <EmbeddedResource Include="assets/shaders/*.cso" LogicalName="tipaura.shaders.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="LICENSE" LogicalName="tipaura.licenses.tipaura.txt" />
+    <EmbeddedResource Include="assets/fonts/LICENSE-lucide.txt" LogicalName="tipaura.licenses.lucide.txt" />
+    <EmbeddedResource Include="assets/licenses/*.txt" LogicalName="tipaura.licenses.%(Filename)%(Extension)" />
+    <!-- Encounter files live next to the exe so users can edit and add them. -->
+    <None Include="data/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

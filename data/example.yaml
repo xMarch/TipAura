@@ -1,0 +1,81 @@
+# TipAura 範例戰鬥設定檔。欄位說明見 TECHNICAL.md「Encounter YAML」。
+# 按 Numpad1~9 啟動綁定該鍵的倒數；Alt+Numpad1~9 重設該鍵的倒數；Alt+Numpad0 重設整場戰鬥。
+version: 4              # 檔案格式版本；舊版檔案載入時會提示升級
+name: 範例首領
+timers:
+  - id: breath
+    name: 龍息
+    key: 1
+    duration: 30
+    warn_before: 5
+    sound:
+      tts: "{name} {sec} 秒"
+    icon: icons/fire.png
+    message: 躲到首領背後！
+    color: "#E05A3A"
+
+  - id: frost_orb
+    name: 冰霜寶珠
+    key: 2
+    duration: 20
+    repeat: true            # 歸零後自動重新計時，直到重設
+    warn_before: 3
+    sound:
+      sfx: sfx/chime.wav
+    icon: icons/frost.png
+    color: "#4696E6"
+
+  - id: poison
+    name: 毒池
+    key: 3
+    duration: 12
+    max_instances: 3        # 最多同時 3 條
+    on_limit: replace_oldest
+    sound:
+      tts: 毒池消失
+    icon: icons/poison.png
+
+  - id: adds
+    name: 小怪出現
+    key: 4
+    duration: 45
+    warn_before: 10
+    sound:
+      tts: 小怪 十秒後出現，坦克準備
+    message: 小怪即將出現
+
+  # 同一個鍵可以綁多條倒數：按 Numpad5 會同時啟動下面兩條。
+  - id: phase_soak
+    name: 分攤
+    key: 5
+    duration: 15
+    warn_before: 4
+    sound:
+      tts: 準備分攤
+  - id: phase_knockback
+    name: 擊退
+    key: 5
+    duration: 25
+    warn_before: 4
+    on_limit: ignore
+    sound:
+      sfx: sfx/chime.wav
+    message: 背對牆壁
+
+  # 一條倒數可綁多個鍵（Numpad6 或 Numpad7 都會啟動），並可同時播放多個音效：
+  # offset 以 warn_before 的時間點為基準（秒），負值提前、正值延後；偏移相同的音效同時播放。
+  - id: phase_change
+    name: 轉階段
+    key: [6, 7]
+    duration: 20
+    warn_before: 3
+    sound:
+      - sfx: sfx/chime.wav
+      - tts: "{sec} 秒後轉階段"   # {sec} = 此音效播放時的剩餘秒數
+        offset: 1
+    icon: lucide:tornado    # 內建 Lucide 圖示（lucide:<名稱>），以 color 的顏色繪製
+    message: 準備轉階段
+    provider: 團隊共用
+    note: |-
+      這裡可以寫最多 1024 字的註解，
+      只顯示在主視窗，不會出現在遊戲畫面上。
